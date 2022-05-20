@@ -403,15 +403,15 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -780,
-      "y": -520,
+      "y": -470,
       "z": 0
     },
     "_lrot": {
       "__type__": "cc.Quat",
       "x": 0,
       "y": 0,
-      "z": 0,
-      "w": 1
+      "z": 0.0024434585213449363,
+      "w": 0.9999970147507714
     },
     "_lscale": {
       "__type__": "cc.Vec3",
@@ -424,7 +424,7 @@
       "__type__": "cc.Vec3",
       "x": 0,
       "y": 0,
-      "z": 0
+      "z": 0.28
     },
     "_id": "2f64uflYZDUofw+xp7MQu1"
   },
@@ -445,7 +445,7 @@
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0
+      "y": 0.5
     },
     "_id": "81ZWihzARFT78Dfa6b7QOG"
   },
@@ -508,6 +508,10 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "playerMovingSpeed": 10,
+    "playerJumpHeight": 350,
+    "playerJumpTime": 0.45,
+    "playerJumpDelay": 0,
     "_id": "a2e7s3qX1Ga7kddemBCjEP"
   },
   {

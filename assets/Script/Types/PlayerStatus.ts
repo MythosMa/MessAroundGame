@@ -1,0 +1,13 @@
+export enum PLAYER_STATUS {
+  STAND_BY,
+  MOVE_LEFT,
+  MOVE_RIGHT,
+}
+
+export enum PLAYER_ACTIONS {
+  NO_ACTION,
+  DO_ACTION,
+  JUMP,
+  DOWN,
+  SHOOTING,
+}
