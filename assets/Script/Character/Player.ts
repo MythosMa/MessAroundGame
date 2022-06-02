@@ -1,5 +1,11 @@
-import { _decorator, Component, Node, Vec3, Tween } from "cc";
-import { PLAYER_STATUS, PLAYER_ACTIONS } from "../Types/PlayerStatus";
+import { _decorator, Component, Vec3, Tween } from "cc";
+import {
+  PLAYER_STATUS,
+  PLAYER_ACTIONS,
+  PLAYER_DIRECTION,
+} from "../Types/PlayerStatus";
+
+import { changePosition, dealCoolDown } from "../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 @ccclass("Player")
@@ -14,15 +20,23 @@ export class Player extends Component {
   playerJumpTime = 0;
 
   @property
-  playerJumpDelay = 0;
+  playerJumpHeighestDelay = 0;
 
+  @property
+  playerShotCD = 0;
+
+  currentCoolDown = { shot: 0 };
   currentPlayerStatus = PLAYER_STATUS.STAND_BY;
   currentPlayerAction = PLAYER_ACTIONS.NO_ACTION;
+  currentPlayerDirection = PLAYER_DIRECTION.TO_RIGHT;
+
   playerPosition = null;
 
   playerMovingPool = [];
 
   currentDeltaTime = 0;
+
+  currentScene = null;
 
   onLoad() {}
 
@@ -34,8 +48,18 @@ export class Player extends Component {
     console.log("player test==============");
   }
 
+  setScene(scene) {
+    this.currentScene = scene;
+  }
+
   update(deltaTime: number) {
     this.currentDeltaTime = deltaTime;
+    Object.keys(this.currentCoolDown).forEach((item) => {
+      this.currentCoolDown[item] = dealCoolDown(
+        this.currentCoolDown[item],
+        deltaTime
+      );
+    });
     switch (this.currentPlayerStatus) {
       case PLAYER_STATUS.MOVE_LEFT:
       case PLAYER_STATUS.MOVE_RIGHT:
@@ -48,17 +72,15 @@ export class Player extends Component {
 
   playerMoving(direction) {
     let currentPosition = this.node.getPosition(this.playerPosition);
-    let newPosition = new Vec3(0, 0, 0);
     switch (direction) {
       case PLAYER_STATUS.MOVE_LEFT:
-        newPosition.x -= this.playerMovingSpeed;
+        changePosition(currentPosition, -this.playerMovingSpeed, "x");
         break;
       case PLAYER_STATUS.MOVE_RIGHT:
-        newPosition.x += this.playerMovingSpeed;
+        changePosition(currentPosition, this.playerMovingSpeed, "x");
+
         break;
     }
-
-    Vec3.add(currentPosition, currentPosition, newPosition);
     this.node.setPosition(currentPosition);
   }
 
@@ -82,7 +104,13 @@ export class Player extends Component {
     if (this.playerMovingPool.length <= 0) {
       this.changePlayerStatus(PLAYER_STATUS.STAND_BY);
     } else {
-      this.changePlayerStatus(this.playerMovingPool[0]);
+      let lastStatus = this.playerMovingPool[0];
+      if (lastStatus === PLAYER_STATUS.MOVE_LEFT) {
+        this.currentPlayerDirection = PLAYER_DIRECTION.TO_LEFT;
+      } else {
+        this.currentPlayerDirection = PLAYER_DIRECTION.TO_RIGHT;
+      }
+      this.changePlayerStatus(lastStatus);
     }
   }
 
@@ -113,7 +141,7 @@ export class Player extends Component {
   }
 
   playerJump(status) {
-    let jumpAllTime = this.playerJumpTime + this.playerJumpDelay;
+    let jumpAllTime = this.playerJumpTime + this.playerJumpHeighestDelay;
     let jumpMove = 0;
     let rotate = 0;
 
@@ -132,37 +160,69 @@ export class Player extends Component {
       jumpMove = p * this.playerMovingSpeed * direction;
     }
 
-    const jumpTw = new Tween(this.node)
-      .parallel(
-        new Tween()
-          .by(
-            this.playerJumpTime / 2,
-            {
-              position: new Vec3(0, this.playerJumpHeight, 0),
-            },
-            {
-              easing: "sineOut",
-            }
-          )
-          .delay(this.playerJumpDelay)
-          .by(
-            this.playerJumpTime / 2,
-            {
-              position: new Vec3(0, -this.playerJumpHeight, 0),
-            },
-            {
-              easing: "sineIn",
-            }
-          ),
-        new Tween().by(jumpAllTime, {
-          position: new Vec3(jumpMove, 0, 0),
-          eulerAngles: new Vec3(0, 0, rotate), // 欧拉角旋转，rotation 四元是什么鬼？？？
-        })
+    let singleRatio = 0;
+    /**
+     * 动作跳跃，想要跳跃的感觉更自然一点，使用了Y轴的缓入缓出，但是X轴要保证匀速
+     * 所以无法直接写成一个动作，只能动态计算X轴的移动
+     */
+    const jumpMoveTw = new Tween(this.node.getPosition())
+      .by(
+        this.playerJumpTime / 2,
+        {
+          y: this.playerJumpHeight,
+        },
+        {
+          easing: "sineOut",
+          onStart: () => {
+            singleRatio = 0;
+          },
+          onUpdate: (target, ratio) => {
+            singleRatio = ratio - singleRatio;
+            changePosition(target, jumpMove * 0.5 * singleRatio);
+            this.node.setPosition(target as Vec3);
+            singleRatio = ratio;
+          },
+        }
+      )
+      .delay(this.playerJumpHeighestDelay)
+      .by(
+        this.playerJumpTime / 2,
+        {
+          y: -this.playerJumpHeight,
+        },
+        {
+          easing: "sineIn",
+          onStart: () => {
+            singleRatio = 0;
+          },
+          onUpdate: (target, ratio) => {
+            singleRatio = ratio - singleRatio;
+            changePosition(target, jumpMove * 0.5 * singleRatio);
+            this.node.setPosition(target as Vec3);
+            singleRatio = ratio;
+          },
+        }
       )
       .call(() => {
         this.changePlayerMovingStatus(-1);
         this.setPlayerAction(PLAYER_ACTIONS.NO_ACTION);
       })
       .start();
+
+    const jumpRotate = new Tween(this.node)
+      .by(jumpAllTime, {
+        eulerAngles: new Vec3(0, 0, rotate),
+      })
+      .start();
+  }
+
+  playerShot() {
+    if (this.currentCoolDown.shot <= 0) {
+      this.currentScene.playerShot(
+        this.node.getPosition(),
+        this.currentPlayerDirection
+      );
+      this.currentCoolDown.shot = this.playerShotCD;
+    }
   }
 }

@@ -4,6 +4,11 @@ export enum PLAYER_STATUS {
   MOVE_RIGHT,
 }
 
+export enum PLAYER_DIRECTION {
+  TO_LEFT,
+  TO_RIGHT,
+}
+
 export enum PLAYER_ACTIONS {
   NO_ACTION,
   DO_ACTION,

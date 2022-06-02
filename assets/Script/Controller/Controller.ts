@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, input, Input } from "cc";
+import { _decorator, Component, Node, input, Input, KeyCode } from "cc";
 import { PLAYER_STATUS, PLAYER_ACTIONS } from "../Types/PlayerStatus";
 import { KEY_CODE } from "../Types/Common";
 
@@ -8,6 +8,7 @@ const { ccclass, property } = _decorator;
 export class Controller extends Component {
   player = null;
   pressingKeys = [];
+
   onLoad() {
     this.player = this.node.getComponent("Player");
     input.on(Input.EventType.KEY_DOWN, this.keyDownCallback, this);
@@ -36,6 +37,9 @@ export class Controller extends Component {
         break;
       case KEY_CODE.KEY_Z:
         this.player.setPlayerAction(PLAYER_ACTIONS.JUMP);
+        break;
+      case KeyCode.KEY_X:
+        this.player.playerShot();
         break;
     }
   }
