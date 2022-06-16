@@ -3,6 +3,7 @@ import {
   PLAYER_STATUS,
   PLAYER_ACTIONS,
   PLAYER_DIRECTION,
+  PLAYER_JUMP_DIRECTION,
 } from "../Types/PlayerStatus";
 import { PlayerActionTreeNode } from "../Types/Common";
 import { changePosition, dealCoolDown } from "../utils/nodeScriptTools";
@@ -25,9 +26,6 @@ export class Player extends Component {
   @property
   playerShotCD = 0;
 
-  currentPlayerStatus = PLAYER_STATUS.STAND_BY;
-  currentPlayerAction = PLAYER_ACTIONS.NO_ACTION;
-
   playerPosition = null;
 
   currentDeltaTime = 0;
@@ -40,6 +38,7 @@ export class Player extends Component {
   // 角色当前行为
   playerStatus = {
     direction: PLAYER_DIRECTION.TO_RIGHT,
+    jumpDirection: PLAYER_JUMP_DIRECTION.TO_DOWN,
     isMoving: false,
     isJumping: false,
   };
@@ -67,8 +66,15 @@ export class Player extends Component {
       trueNext: null,
       falseNext: null,
     };
+    const jumpActionNode: PlayerActionTreeNode = {
+      currentFunc: this.jumpingAction.bind(this),
+      toNextConditionFunc: null,
+      trueNext: null,
+      falseNext: null,
+    };
     this.playerActionNode.toNextConditionFunc = this.checkIsJumping.bind(this);
     this.playerActionNode.falseNext = moveActionNode;
+    this.playerActionNode.trueNext = jumpActionNode;
   }
 
   start() {}
@@ -129,15 +135,11 @@ export class Player extends Component {
     }
   }
 
-  checkIsJumping() {
-    return this.playerStatus.isJumping;
-  }
-
   checkIsMoving() {
     return this.playerStatus.isMoving;
   }
 
-  movingKeyDown(playerMovingDirection) {
+  moveKeyDown(playerMovingDirection) {
     this.playerMovingPool.push(playerMovingDirection);
     this.changePlayerDirection(this.playerMovingPool[0]);
     this.playerCurrentMovingSpeed =
@@ -146,7 +148,7 @@ export class Player extends Component {
     this.playerStatus.isMoving = true;
   }
 
-  movingKeyUp(playerMovingDirection: PLAYER_DIRECTION) {
+  moveKeyUp(playerMovingDirection: PLAYER_DIRECTION) {
     let index = this.playerMovingPool.indexOf(playerMovingDirection);
     if (index !== -1) {
       this.playerMovingPool.splice(index, 1);
@@ -169,7 +171,7 @@ export class Player extends Component {
     this.node.setPosition(currentPosition);
   }
 
-  changePlayerDirection(direction) { 
+  changePlayerDirection(direction) {
     if (this.playerStatus.direction !== direction) {
       this.playerStatus.direction = direction;
       const originScale = this.node.getScale();
@@ -178,4 +180,18 @@ export class Player extends Component {
       );
     }
   }
+
+  checkIsJumping() {
+    return this.playerStatus.isJumping;
+  }
+
+  jumpKeyDown() {
+    if (!this.playerStatus.isJumping) {
+      this.playerStatus.isJumping = true;
+    }
+  }
+
+  jumpKeyUp() {}
+
+  jumpingAction(deltaTime: number) {}
 }

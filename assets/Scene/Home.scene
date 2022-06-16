@@ -927,7 +927,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 840,
-      "height": 489
+      "height": 639
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -956,7 +956,7 @@
       "b": 0,
       "a": 255
     },
-    "_string": "Z键发射子弹\n方向键控制移动\n",
+    "_string": "Z键发射子弹\n方向键控制移动\n空格键控制跳跃\n",
     "_horizontalAlign": 0,
     "_verticalAlign": 0,
     "_actualFontSize": 120,

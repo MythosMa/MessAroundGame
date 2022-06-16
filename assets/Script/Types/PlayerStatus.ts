@@ -9,6 +9,11 @@ export enum PLAYER_DIRECTION {
   TO_RIGHT,
 }
 
+export enum PLAYER_JUMP_DIRECTION {
+  TO_UP,
+  TO_DOWN,
+}
+
 export enum PLAYER_ACTIONS {
   NO_ACTION,
   DO_ACTION,

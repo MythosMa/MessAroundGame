@@ -27,15 +27,16 @@ export class Controller extends Component {
   keyDownCallback(event) {
     switch (event.keyCode) {
       case KEY_CODE.KEY_LEFT:
-        this.player.movingKeyDown(PLAYER_DIRECTION.TO_LEFT);
+        this.player.moveKeyDown(PLAYER_DIRECTION.TO_LEFT);
         break;
       case KEY_CODE.KEY_RIGHT:
-        this.player.movingKeyDown(PLAYER_DIRECTION.TO_RIGHT);
+        this.player.moveKeyDown(PLAYER_DIRECTION.TO_RIGHT);
         break;
       case KEY_CODE.KEY_Z: // 射击
         this.player.playerShot();
         break;
       case KEY_CODE.KEY_SPACE:
+        this.player.jumpKeyDown();
         break;
       case KeyCode.KEY_X:
         break;
@@ -51,12 +52,13 @@ export class Controller extends Component {
   keyUpCallback(event) {
     switch (event.keyCode) {
       case KEY_CODE.KEY_LEFT:
-        this.player.movingKeyUp(PLAYER_DIRECTION.TO_LEFT);
+        this.player.moveKeyUp(PLAYER_DIRECTION.TO_LEFT);
         break;
       case KEY_CODE.KEY_RIGHT:
-        this.player.movingKeyUp(PLAYER_DIRECTION.TO_RIGHT);
+        this.player.moveKeyUp(PLAYER_DIRECTION.TO_RIGHT);
         break;
       case KEY_CODE.KEY_SPACE:
+        this.player.jumpKeyUp();
         break;
       case KEY_CODE.KEY_Z:
         break;
