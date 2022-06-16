@@ -5,7 +5,7 @@ import { changePosition, checkOutScreen } from "../utils/nodeScriptTools";
 const { ccclass, property } = _decorator;
 
 @ccclass("Bullet")
-export class Bul_le_t extends Component {
+export class Bullet extends Component {
   @property
   bulletSpeed = 1;
 

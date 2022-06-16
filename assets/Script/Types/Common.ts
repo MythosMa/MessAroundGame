@@ -5,3 +5,10 @@ export enum KEY_CODE {
   KEY_X = 88,
   KEY_Z = 90,
 }
+
+export interface PlayerActionTreeNode {
+  currentFunc: Function | null;
+  toNextConditionFunc: Function | null;
+  trueNext: PlayerActionTreeNode | null;
+  falseNext: PlayerActionTreeNode | null;
+}

@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, input, Input, KeyCode } from "cc";
-import { PLAYER_STATUS, PLAYER_ACTIONS } from "../Types/PlayerStatus";
+import { PLAYER_DIRECTION } from "../Types/PlayerStatus";
 import { KEY_CODE } from "../Types/Common";
 
 const { ccclass, property } = _decorator;
@@ -25,21 +25,19 @@ export class Controller extends Component {
   }
 
   keyDownCallback(event) {
-    console.log("keyDownCallback===============");
-    console.log(event);
-    console.log("keyDownCallback===============");
     switch (event.keyCode) {
       case KEY_CODE.KEY_LEFT:
-        this.player.changePlayerMovingStatus(PLAYER_STATUS.MOVE_LEFT);
+        this.player.movingKeyDown(PLAYER_DIRECTION.TO_LEFT);
         break;
       case KEY_CODE.KEY_RIGHT:
-        this.player.changePlayerMovingStatus(PLAYER_STATUS.MOVE_RIGHT);
+        this.player.movingKeyDown(PLAYER_DIRECTION.TO_RIGHT);
         break;
-      case KEY_CODE.KEY_Z:
-        this.player.setPlayerAction(PLAYER_ACTIONS.JUMP);
+      case KEY_CODE.KEY_Z: // 射击
+        this.player.playerShot();
+        break;
+      case KEY_CODE.KEY_SPACE:
         break;
       case KeyCode.KEY_X:
-        this.player.playerShot();
         break;
     }
   }
@@ -51,15 +49,16 @@ export class Controller extends Component {
   }
 
   keyUpCallback(event) {
-    console.log("keyUpCallback===============");
-    console.log(event);
-    console.log("keyUpCallback===============");
     switch (event.keyCode) {
       case KEY_CODE.KEY_LEFT:
-        this.player.changePlayerMovingStatus(PLAYER_STATUS.MOVE_LEFT, false);
+        this.player.movingKeyUp(PLAYER_DIRECTION.TO_LEFT);
         break;
       case KEY_CODE.KEY_RIGHT:
-        this.player.changePlayerMovingStatus(PLAYER_STATUS.MOVE_RIGHT, false);
+        this.player.movingKeyUp(PLAYER_DIRECTION.TO_RIGHT);
+        break;
+      case KEY_CODE.KEY_SPACE:
+        break;
+      case KEY_CODE.KEY_Z:
         break;
     }
   }
