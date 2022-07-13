@@ -7,8 +7,17 @@ export enum KEY_CODE {
 }
 
 export interface PlayerActionTreeNode {
-  currentFunc: Function | null;
-  toNextConditionFunc: Function | null;
-  trueNext: PlayerActionTreeNode | null;
-  falseNext: PlayerActionTreeNode | null;
+  toNextConditionFunc: Function | null; // 子节点的判定函数
+  trueNext: PlayerActionTreeNode | null; // 判定为真执行的子节点
+  falseNext: PlayerActionTreeNode | null; // 判定为假执行的子节点
+  currentNodeFunc: Function | null; // 当前节点必须要执行的函数
+  noNextNodeFunc: Function | null; // 当不存在子节点时要执行的函数
+}
+
+export interface JumpActionData {
+  startPositionY: number;
+  changeToOverPositionY: number;
+  targetPositionY: number;
+  currentPositionY: number;
+  jumpSpeed: number;
 }

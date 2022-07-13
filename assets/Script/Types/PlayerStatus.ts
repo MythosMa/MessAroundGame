@@ -11,6 +11,8 @@ export enum PLAYER_DIRECTION {
 
 export enum PLAYER_JUMP_DIRECTION {
   TO_UP,
+  TO_UP_OVER,
+  TO_DOWN_START,
   TO_DOWN,
 }
 

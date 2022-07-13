@@ -141,7 +141,7 @@
     "_priority": 1073741824,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 951.0614525139665,
+    "_orthoHeight": 776.4652223489168,
     "_near": 0,
     "_far": 2000,
     "_color": {
@@ -412,7 +412,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -780,
-      "y": -470,
+      "y": -520,
       "z": 0
     },
     "_lrot": {
@@ -560,7 +560,7 @@
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0.5
+      "y": 0
     },
     "_id": "81ZWihzARFT78Dfa6b7QOG"
   },
@@ -625,9 +625,11 @@
     "__prefab": null,
     "playerMovingSpeed": 10,
     "playerJumpHeight": 350,
-    "playerJumpTime": 0.5,
+    "playerJumpSpeed": 40,
+    "playerJumpSinRatio": 0.8,
     "playerJumpHeighestDelay": 0,
     "playerShotCD": 0.3,
+    "playerJumpKeyPressTime": 0.2,
     "_id": "a2e7s3qX1Ga7kddemBCjEP"
   },
   {

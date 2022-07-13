@@ -5,7 +5,7 @@ import {
   PLAYER_DIRECTION,
   PLAYER_JUMP_DIRECTION,
 } from "../Types/PlayerStatus";
-import { PlayerActionTreeNode } from "../Types/Common";
+import { JumpActionData, PlayerActionTreeNode } from "../Types/Common";
 import { changePosition, dealCoolDown } from "../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
@@ -18,13 +18,19 @@ export class Player extends Component {
   playerJumpHeight = 0;
 
   @property
-  playerJumpTime = 0;
+  playerJumpSpeed = 0;
+
+  @property
+  playerJumpSinRatio = 0;
 
   @property
   playerJumpHeighestDelay = 0;
 
   @property
-  playerShotCD = 0;
+  playerShotCD = 0; // 公开设置数据：角色射击CD值
+
+  @property
+  playerJumpKeyPressTime = 0; // 跳跃按钮响应最长时长（根据按键时长跳跃高度的上限）
 
   playerPosition = null;
 
@@ -45,10 +51,20 @@ export class Player extends Component {
 
   // 角色当前行为树
   playerActionNode: PlayerActionTreeNode = {
-    currentFunc: null,
-    toNextConditionFunc: null,
-    falseNext: null,
-    trueNext: null,
+    currentNodeFunc: undefined,
+    toNextConditionFunc: undefined,
+    falseNext: undefined,
+    trueNext: undefined,
+    noNextNodeFunc: undefined,
+  };
+
+  // 角色跳跃信息
+  playerJumpDatas: JumpActionData = {
+    startPositionY: 0,
+    changeToOverPositionY: 0,
+    targetPositionY: 0,
+    currentPositionY: 0,
+    jumpSpeed: 0,
   };
 
   // 角色当前数值
@@ -57,20 +73,29 @@ export class Player extends Component {
   playerCurrentMovingSpeed = 0;
 
   // 当前技能冷却
-  currentCoolDown = { shot: 0 };
+  coolDownMaps = { shot: 0, jumpKeyPress: 0 };
 
   onLoad() {
     const moveActionNode: PlayerActionTreeNode = {
-      currentFunc: this.movingAction.bind(this),
-      toNextConditionFunc: null,
-      trueNext: null,
-      falseNext: null,
+      toNextConditionFunc: undefined,
+      trueNext: undefined,
+      falseNext: undefined,
+      currentNodeFunc: undefined,
+      noNextNodeFunc: this.movingAction.bind(this),
+    };
+    const jumpMoveActionNode: PlayerActionTreeNode = {
+      toNextConditionFunc: undefined,
+      trueNext: undefined,
+      falseNext: undefined,
+      currentNodeFunc: undefined,
+      noNextNodeFunc: this.jumpingMoveAction.bind(this),
     };
     const jumpActionNode: PlayerActionTreeNode = {
-      currentFunc: this.jumpingAction.bind(this),
-      toNextConditionFunc: null,
-      trueNext: null,
-      falseNext: null,
+      toNextConditionFunc: this.checkIsMoving.bind(this),
+      trueNext: jumpMoveActionNode,
+      falseNext: undefined,
+      currentNodeFunc: undefined,
+      noNextNodeFunc: this.jumpingAction.bind(this),
     };
     this.playerActionNode.toNextConditionFunc = this.checkIsJumping.bind(this);
     this.playerActionNode.falseNext = moveActionNode;
@@ -91,23 +116,28 @@ export class Player extends Component {
 
   update(deltaTime: number) {
     this.currentDeltaTime = deltaTime;
-    Object.keys(this.currentCoolDown).forEach((item) => {
-      this.currentCoolDown[item] = dealCoolDown(
-        this.currentCoolDown[item],
+    Object.keys(this.coolDownMaps).forEach((item) => {
+      this.coolDownMaps[item] = dealCoolDown(
+        this.coolDownMaps[item],
         deltaTime
       );
     });
 
     let actionNode = this.playerActionNode;
     while (actionNode) {
-      actionNode.currentFunc && actionNode.currentFunc(deltaTime);
+      actionNode.currentNodeFunc && actionNode.currentNodeFunc(deltaTime);
+      let nextNode = null;
       if (actionNode.toNextConditionFunc) {
-        actionNode = actionNode.toNextConditionFunc()
+        nextNode = actionNode.toNextConditionFunc()
           ? actionNode.trueNext
           : actionNode.falseNext;
       } else {
-        actionNode = null;
+        nextNode = null;
       }
+      if (!nextNode) {
+        actionNode.noNextNodeFunc && actionNode.noNextNodeFunc(deltaTime);
+      }
+      actionNode = nextNode;
     }
   }
 
@@ -126,12 +156,12 @@ export class Player extends Component {
   }
 
   playerShot() {
-    if (this.currentCoolDown.shot <= 0) {
+    if (this.coolDownMaps.shot <= 0) {
       this.currentScene.playerShot(
         this.node.getPosition(),
         this.playerStatus.direction
       );
-      this.currentCoolDown.shot = this.playerShotCD;
+      this.coolDownMaps.shot = this.playerShotCD;
     }
   }
 
@@ -188,10 +218,86 @@ export class Player extends Component {
   jumpKeyDown() {
     if (!this.playerStatus.isJumping) {
       this.playerStatus.isJumping = true;
+      this.coolDownMaps.jumpKeyPress = this.playerJumpKeyPressTime;
     }
   }
 
-  jumpKeyUp() {}
+  jumpKeyUp() {
+    if (this.playerStatus.isJumping) {
+      this.coolDownMaps.jumpKeyPress = 0;
+    }
+  }
 
-  jumpingAction(deltaTime: number) {}
+  // jumpKeyDown() {
+  //   if (!this.playerStatus.isJumping) {
+  //     this.playerStatus.isJumping = true;
+  //     let currentPosition = this.node.getPosition();
+  //     this.playerJumpDatas.targetPositionY =
+  //       currentPosition.y + this.playerJumpHeight;
+  //     this.playerJumpDatas.startPositionY = currentPosition.y;
+  //     this.playerJumpDatas.currentPositionY = currentPosition.y;
+  //     this.playerJumpDatas.changeToOverPositionY =
+  //       currentPosition.y + this.playerJumpHeight * this.playerJumpSinRatio;
+  //     this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
+  //     this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
+  //   }
+  // }
+
+  // jumpKeyUp() {
+  //   if (this.playerStatus.jumpDirection === PLAYER_JUMP_DIRECTION.TO_UP) {
+  //     // this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP_OVER;
+  //   }
+  // }
+
+  // jumpingAction(deltaTime: number) {
+  //   let currentPosition = this.node.getPosition(this.playerPosition);
+  //   switch (this.playerStatus.jumpDirection) {
+  //     case PLAYER_JUMP_DIRECTION.TO_UP:
+  //       changePosition(currentPosition, this.playerJumpSpeed, "y");
+  //       break;
+  //     case PLAYER_JUMP_DIRECTION.TO_UP_OVER:
+  //       break;
+  //     case PLAYER_JUMP_DIRECTION.TO_DOWN_START:
+  //       break;
+  //     case PLAYER_JUMP_DIRECTION.TO_DOWN:
+  //       break;
+  //   }
+  //   this.node.setPosition(currentPosition);
+  //   console.log("jumpingAction===============");
+  //   console.log("jumpingAction");
+  //   console.log(currentPosition);
+  //   console.log("jumpingAction===============");
+  // }
+
+  // jumpingMoveAction(deltaTime: number) {
+  //   console.log("jumpingMoveAction===============");
+  //   console.log("jumpingMoveAction");
+  //   console.log("jumpingMoveAction===============");
+  // }
+
+  jumpingAction(deltaTime: number) {
+    console.log("jumpingAction========================");
+    console.log(this.coolDownMaps.jumpKeyPress);
+    console.log("jumpingAction========================");
+    let currentPosition = this.node.getPosition(this.playerPosition);
+    if (this.coolDownMaps.jumpKeyPress > 0) {
+      changePosition(currentPosition, this.playerJumpSpeed, "y");
+      this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
+    } else {
+      if (this.playerStatus.jumpDirection === PLAYER_JUMP_DIRECTION.TO_UP) {
+        this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP_OVER;
+      }
+    }
+    this.node.setPosition(currentPosition);
+  }
+
+  jumpUpOverAction(deltaTime: number){
+    
+  }
+
+  jumpingMoveAction(deltaTime: number) {
+    // console.log("jumpingMoveAction===============");
+    // console.log("jumpingMoveAction");
+    // console.log("jumpingMoveAction===============");
+  }
 }

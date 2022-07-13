@@ -41,13 +41,12 @@ export class Controller extends Component {
       case KeyCode.KEY_X:
         break;
     }
+    if (this.pressingKeys.indexOf(event.keyCode) === -1) {
+      this.pressingKeys.push(event.keyCode);
+    }
   }
 
-  keyPressingCallback(event) {
-    console.log("keyPressingCallback===============");
-    console.log(event);
-    console.log("keyPressingCallback===============");
-  }
+  keyPressingCallback(event) {}
 
   keyUpCallback(event) {
     switch (event.keyCode) {
@@ -62,6 +61,10 @@ export class Controller extends Component {
         break;
       case KEY_CODE.KEY_Z:
         break;
+    }
+    let keyIndex = this.pressingKeys.indexOf(event.keyCode);
+    if (keyIndex !== -1) {
+      this.pressingKeys.splice(keyIndex, 1);
     }
   }
 
