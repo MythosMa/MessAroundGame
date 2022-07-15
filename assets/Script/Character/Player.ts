@@ -1,4 +1,4 @@
-import { _decorator, Component, Vec3, Tween } from "cc";
+import { _decorator, Component, Vec3, Tween, UITransform } from "cc";
 import {
   PLAYER_STATUS,
   PLAYER_ACTIONS,
@@ -15,9 +15,6 @@ export class Player extends Component {
   playerMovingSpeed = 0;
 
   @property
-  playerJumpHeight = 0;
-
-  @property
   playerJumpSpeed = 0;
 
   @property
@@ -31,6 +28,9 @@ export class Player extends Component {
 
   @property
   playerJumpKeyPressTime = 0; // 跳跃按钮响应最长时长（根据按键时长跳跃高度的上限）
+
+  @property
+  playerJumpGravity = 0; // 角色受到的重力加速度，用来控制跳跃时的速度变化
 
   playerPosition = null;
 
@@ -81,21 +81,21 @@ export class Player extends Component {
       trueNext: undefined,
       falseNext: undefined,
       currentNodeFunc: undefined,
-      noNextNodeFunc: this.movingAction.bind(this),
+      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.MOVING),
     };
     const jumpMoveActionNode: PlayerActionTreeNode = {
       toNextConditionFunc: undefined,
       trueNext: undefined,
       falseNext: undefined,
       currentNodeFunc: undefined,
-      noNextNodeFunc: this.jumpingMoveAction.bind(this),
+      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING_MOVE),
     };
     const jumpActionNode: PlayerActionTreeNode = {
       toNextConditionFunc: this.checkIsMoving.bind(this),
       trueNext: jumpMoveActionNode,
       falseNext: undefined,
       currentNodeFunc: undefined,
-      noNextNodeFunc: this.jumpingAction.bind(this),
+      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING),
     };
     this.playerActionNode.toNextConditionFunc = this.checkIsJumping.bind(this);
     this.playerActionNode.falseNext = moveActionNode;
@@ -149,7 +149,6 @@ export class Player extends Component {
         break;
       case PLAYER_STATUS.MOVE_RIGHT:
         changePosition(currentPosition, this.playerMovingSpeed, "x");
-
         break;
     }
     this.node.setPosition(currentPosition);
@@ -158,11 +157,38 @@ export class Player extends Component {
   playerShot() {
     if (this.coolDownMaps.shot <= 0) {
       this.currentScene.playerShot(
-        this.node.getPosition(),
+        new Vec3(
+          this.node.getPosition().x,
+          this.node.getPosition().y +
+            this.node.getComponent(UITransform).contentSize.height / 2,
+          this.node.getPosition().z
+        ),
         this.playerStatus.direction
       );
       this.coolDownMaps.shot = this.playerShotCD;
     }
+  }
+
+  runAction(actions: PLAYER_ACTIONS, deltaTime: number) {
+    let currentPosition = this.node.getPosition(this.playerPosition);
+    switch (actions) {
+      case PLAYER_ACTIONS.MOVING:
+        this.movingAction(deltaTime, currentPosition);
+        break;
+      case PLAYER_ACTIONS.JUMPING:
+        this.jumpingAction(deltaTime, currentPosition);
+        break;
+      case PLAYER_ACTIONS.JUMPING_MOVE:
+        this.jumpingMoveAction(deltaTime, currentPosition);
+        break;
+    }
+
+    console.log("runAction=============");
+    console.log(deltaTime);
+    console.log(actions);
+    console.log("runAction=============");
+
+    this.node.setPosition(currentPosition);
   }
 
   checkIsMoving() {
@@ -195,12 +221,6 @@ export class Player extends Component {
     }
   }
 
-  movingAction(deltaTime: number) {
-    let currentPosition = this.node.getPosition(this.playerPosition);
-    changePosition(currentPosition, this.playerCurrentMovingSpeed, "x");
-    this.node.setPosition(currentPosition);
-  }
-
   changePlayerDirection(direction) {
     if (this.playerStatus.direction !== direction) {
       this.playerStatus.direction = direction;
@@ -211,6 +231,14 @@ export class Player extends Component {
     }
   }
 
+  movingAction(deltaTime: number, currentPosition) {
+    changePosition(
+      currentPosition,
+      this.playerCurrentMovingSpeed * deltaTime,
+      "x"
+    );
+  }
+
   checkIsJumping() {
     return this.playerStatus.isJumping;
   }
@@ -219,6 +247,9 @@ export class Player extends Component {
     if (!this.playerStatus.isJumping) {
       this.playerStatus.isJumping = true;
       this.coolDownMaps.jumpKeyPress = this.playerJumpKeyPressTime;
+
+      this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
+      this.playerJumpDatas.startPositionY = this.node.getPosition().y;
     }
   }
 
@@ -228,76 +259,84 @@ export class Player extends Component {
     }
   }
 
-  // jumpKeyDown() {
-  //   if (!this.playerStatus.isJumping) {
-  //     this.playerStatus.isJumping = true;
-  //     let currentPosition = this.node.getPosition();
-  //     this.playerJumpDatas.targetPositionY =
-  //       currentPosition.y + this.playerJumpHeight;
-  //     this.playerJumpDatas.startPositionY = currentPosition.y;
-  //     this.playerJumpDatas.currentPositionY = currentPosition.y;
-  //     this.playerJumpDatas.changeToOverPositionY =
-  //       currentPosition.y + this.playerJumpHeight * this.playerJumpSinRatio;
-  //     this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
-  //     this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
-  //   }
-  // }
-
-  // jumpKeyUp() {
-  //   if (this.playerStatus.jumpDirection === PLAYER_JUMP_DIRECTION.TO_UP) {
-  //     // this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP_OVER;
-  //   }
-  // }
-
-  // jumpingAction(deltaTime: number) {
-  //   let currentPosition = this.node.getPosition(this.playerPosition);
-  //   switch (this.playerStatus.jumpDirection) {
-  //     case PLAYER_JUMP_DIRECTION.TO_UP:
-  //       changePosition(currentPosition, this.playerJumpSpeed, "y");
-  //       break;
-  //     case PLAYER_JUMP_DIRECTION.TO_UP_OVER:
-  //       break;
-  //     case PLAYER_JUMP_DIRECTION.TO_DOWN_START:
-  //       break;
-  //     case PLAYER_JUMP_DIRECTION.TO_DOWN:
-  //       break;
-  //   }
-  //   this.node.setPosition(currentPosition);
-  //   console.log("jumpingAction===============");
-  //   console.log("jumpingAction");
-  //   console.log(currentPosition);
-  //   console.log("jumpingAction===============");
-  // }
-
-  // jumpingMoveAction(deltaTime: number) {
-  //   console.log("jumpingMoveAction===============");
-  //   console.log("jumpingMoveAction");
-  //   console.log("jumpingMoveAction===============");
-  // }
-
-  jumpingAction(deltaTime: number) {
-    console.log("jumpingAction========================");
-    console.log(this.coolDownMaps.jumpKeyPress);
-    console.log("jumpingAction========================");
-    let currentPosition = this.node.getPosition(this.playerPosition);
+  jumpingAction(deltaTime: number, currentPosition) {
     if (this.coolDownMaps.jumpKeyPress > 0) {
-      changePosition(currentPosition, this.playerJumpSpeed, "y");
-      this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
+      this.jumpUpAction(deltaTime, currentPosition);
     } else {
       if (this.playerStatus.jumpDirection === PLAYER_JUMP_DIRECTION.TO_UP) {
         this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP_OVER;
       }
+      switch (this.playerStatus.jumpDirection) {
+        case PLAYER_JUMP_DIRECTION.TO_UP_OVER:
+          this.jumpUpOverAction(deltaTime, currentPosition);
+          break;
+        case PLAYER_JUMP_DIRECTION.TO_DOWN_START:
+          this.jumpDownStartAction(deltaTime, currentPosition);
+          break;
+        case PLAYER_JUMP_DIRECTION.TO_DOWN:
+          this.jumpDownAction(deltaTime, currentPosition);
+          break;
+      }
     }
-    this.node.setPosition(currentPosition);
   }
 
-  jumpUpOverAction(deltaTime: number){
-    
+  jumpUpAction(deltaTime: number, currentPosition) {
+    this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
+    changePosition(
+      currentPosition,
+      this.playerJumpDatas.jumpSpeed * deltaTime,
+      "y"
+    );
   }
 
-  jumpingMoveAction(deltaTime: number) {
-    // console.log("jumpingMoveAction===============");
-    // console.log("jumpingMoveAction");
-    // console.log("jumpingMoveAction===============");
+  jumpUpOverAction(deltaTime: number, currentPosition) {
+    let v0 = this.playerJumpDatas.jumpSpeed;
+    let t = deltaTime;
+    let a = this.playerJumpGravity;
+    let s = v0 * t + 0.5 * a * t * t;
+    this.playerJumpDatas.jumpSpeed = this.playerJumpDatas.jumpSpeed - a * t;
+
+    changePosition(currentPosition, s, "y");
+
+    if (this.playerJumpDatas.jumpSpeed <= 0) {
+      this.playerJumpDatas.jumpSpeed = 0;
+      this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_DOWN_START;
+    }
+  }
+
+  jumpDownStartAction(deltaTime: number, currentPosition) {
+    let v0 = this.playerJumpDatas.jumpSpeed;
+    let t = deltaTime;
+    let a = this.playerJumpGravity;
+    let s = v0 * t + 0.5 * a * t * t;
+    this.playerJumpDatas.jumpSpeed = this.playerJumpDatas.jumpSpeed + a * t;
+
+    changePosition(currentPosition, -s, "y");
+
+    if (this.playerJumpDatas.jumpSpeed >= this.playerJumpSpeed) {
+      this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
+      this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_DOWN;
+    }
+  }
+
+  jumpDownAction(deltaTime: number, currentPosition) {
+    changePosition(
+      currentPosition,
+      -this.playerJumpDatas.jumpSpeed * deltaTime,
+      "y"
+    );
+    if (currentPosition.y <= this.playerJumpDatas.startPositionY) {
+      currentPosition.y = this.playerJumpDatas.startPositionY;
+      this.playerStatus.isJumping = false;
+    }
+  }
+
+  jumpingMoveAction(deltaTime: number, currentPosition) {
+    this.jumpingAction(deltaTime, currentPosition);
+    changePosition(
+      currentPosition,
+      (this.playerCurrentMovingSpeed / 2) * deltaTime,
+      "x"
+    );
   }
 }
