@@ -47,15 +47,18 @@ export class Player extends Component {
     jumpDirection: PLAYER_JUMP_DIRECTION.TO_DOWN,
     isMoving: false,
     isJumping: false,
+    isMovingJump: false,
+    isJumpingMove: false,
   };
 
   // 角色当前行为树
   playerActionNode: PlayerActionTreeNode = {
-    currentNodeFunc: undefined,
     toNextConditionFunc: undefined,
-    falseNext: undefined,
-    trueNext: undefined,
+    nextNodeIndex: -1,
+    checkNextNodeConditionFunc: undefined,
+    currentNodeFunc: undefined,
     noNextNodeFunc: undefined,
+    nextNodeArray: [],
   };
 
   // 角色跳跃信息
@@ -78,28 +81,31 @@ export class Player extends Component {
   onLoad() {
     const moveActionNode: PlayerActionTreeNode = {
       toNextConditionFunc: undefined,
-      trueNext: undefined,
-      falseNext: undefined,
+      nextNodeIndex: -1,
+      checkNextNodeConditionFunc: undefined,
       currentNodeFunc: undefined,
       noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.MOVING),
+      nextNodeArray: [],
     };
     const jumpMoveActionNode: PlayerActionTreeNode = {
       toNextConditionFunc: undefined,
-      trueNext: undefined,
-      falseNext: undefined,
+      nextNodeIndex: -1,
+      checkNextNodeConditionFunc: undefined,
       currentNodeFunc: undefined,
       noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING_MOVE),
+      nextNodeArray: [],
     };
     const jumpActionNode: PlayerActionTreeNode = {
       toNextConditionFunc: this.checkIsMoving.bind(this),
-      trueNext: jumpMoveActionNode,
-      falseNext: undefined,
+      nextNodeIndex: -1,
+      checkNextNodeConditionFunc: undefined,
       currentNodeFunc: undefined,
       noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING),
+      nextNodeArray: [jumpMoveActionNode],
     };
-    this.playerActionNode.toNextConditionFunc = this.checkIsJumping.bind(this);
-    this.playerActionNode.falseNext = moveActionNode;
-    this.playerActionNode.trueNext = jumpActionNode;
+    this.playerActionNode.toNextConditionFunc =
+      this.cheRootNodeStatus.bind(this);
+    this.playerActionNode.nextNodeArray = [jumpActionNode, moveActionNode];
   }
 
   start() {}
@@ -127,10 +133,24 @@ export class Player extends Component {
     while (actionNode) {
       actionNode.currentNodeFunc && actionNode.currentNodeFunc(deltaTime);
       let nextNode = null;
-      if (actionNode.toNextConditionFunc) {
-        nextNode = actionNode.toNextConditionFunc()
-          ? actionNode.trueNext
-          : actionNode.falseNext;
+      if (
+        actionNode.nextNodeIndex >= 0 &&
+        actionNode.nextNodeIndex < actionNode.nextNodeArray.length &&
+        actionNode.checkNextNodeConditionFunc &&
+        actionNode.checkNextNodeConditionFunc()
+      ) {
+        nextNode = actionNode.nextNodeArray[actionNode.nextNodeIndex];
+      } else {
+        nextNode = null;
+      }
+      if (!nextNode && actionNode.toNextConditionFunc) {
+        let actionNodeIndex = actionNode.toNextConditionFunc();
+
+        nextNode =
+          actionNodeIndex < 0 ||
+          actionNodeIndex >= actionNode.nextNodeArray.length
+            ? null
+            : actionNode.nextNodeArray[actionNodeIndex];
       } else {
         nextNode = null;
       }
@@ -192,7 +212,10 @@ export class Player extends Component {
   }
 
   checkIsMoving() {
-    return this.playerStatus.isMoving;
+    if (this.playerStatus.isMoving) {
+      return 0;
+    }
+    return -1;
   }
 
   moveKeyDown(playerMovingDirection) {
@@ -239,8 +262,20 @@ export class Player extends Component {
     );
   }
 
+  cheRootNodeStatus() {
+    if (this.playerStatus.isJumping) {
+      return 0;
+    } else if (this.playerStatus.isMoving) {
+      return 1;
+    }
+    return -1;
+  }
+
   checkIsJumping() {
-    return this.playerStatus.isJumping;
+    if (this.playerStatus.isJumping) {
+      return 0;
+    }
+    return -1;
   }
 
   jumpKeyDown() {

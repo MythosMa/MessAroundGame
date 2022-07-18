@@ -629,7 +629,7 @@
     "playerJumpHeighestDelay": 0,
     "playerShotCD": 0.3,
     "playerJumpKeyPressTime": 0.3,
-    "playerJumpGravity": 4000,
+    "playerJumpGravity": 5000,
     "_id": "a2e7s3qX1Ga7kddemBCjEP"
   },
   {
