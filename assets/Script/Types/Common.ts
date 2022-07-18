@@ -16,8 +16,6 @@ export interface PlayerActionTreeNode {
 
 export interface JumpActionData {
   startPositionY: number;
-  changeToOverPositionY: number;
-  targetPositionY: number;
-  currentPositionY: number;
   jumpSpeed: number;
+  moveSpeed: number;
 }
