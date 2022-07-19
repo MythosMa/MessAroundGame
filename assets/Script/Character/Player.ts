@@ -157,19 +157,6 @@ export class Player extends Component {
     runActionNodeTree(this.playerActionNodeTree);
   }
 
-  playerMoving(direction) {
-    let currentPosition = this.node.getPosition(this.playerPosition);
-    switch (direction) {
-      case PLAYER_STATUS.MOVE_LEFT:
-        changePosition(currentPosition, -this.playerMovingSpeed, "x");
-        break;
-      case PLAYER_STATUS.MOVE_RIGHT:
-        changePosition(currentPosition, this.playerMovingSpeed, "x");
-        break;
-    }
-    this.node.setPosition(currentPosition);
-  }
-
   playerShot() {
     if (this.coolDownMaps.shot <= 0) {
       this.currentScene.playerShot(
@@ -206,6 +193,7 @@ export class Player extends Component {
 
     return isPerformed;
   }
+  
   moveKeyDown(playerMovingDirection) {
     this.playerMovingPool.push(playerMovingDirection);
     this.setMovingStatus();
