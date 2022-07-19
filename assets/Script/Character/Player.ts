@@ -193,7 +193,7 @@ export class Player extends Component {
 
     return isPerformed;
   }
-  
+
   moveKeyDown(playerMovingDirection) {
     this.playerMovingPool.push(playerMovingDirection);
     this.setMovingStatus();
