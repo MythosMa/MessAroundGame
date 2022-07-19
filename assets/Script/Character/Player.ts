@@ -211,6 +211,11 @@ export class Player extends Component {
     if (!this.playerStatus.isMovingJump && this.playerStatus.isJumping) {
       this.playerStatus.isJumpingMove = true;
     }
+    if (this.playerStatus.isMovingJump && this.playerMovingPool.length === 1) {
+      this.setMovingJumpStatus();
+    } else if (this.playerStatus.isJumpingMove) {
+      this.setJumpingMoveStatus();
+    }
   }
 
   moveKeyUp(playerMovingDirection: PLAYER_DIRECTION) {
@@ -220,7 +225,7 @@ export class Player extends Component {
     }
     if (this.playerMovingPool.length) {
       this.setMovingStatus();
-      if (this.playerStatus.isMovingJump) {
+      if (this.playerStatus.isMovingJump && index === 0) {
         this.setMovingJumpStatus();
       } else if (this.playerStatus.isJumpingMove) {
         this.setJumpingMoveStatus();
@@ -229,7 +234,7 @@ export class Player extends Component {
       this.playerCurrentMovingSpeed = 0;
       this.playerStatus.isMoving = false;
     }
-    if (!this.playerStatus.isJumping) {
+    if (!this.playerStatus.isJumping && this.playerStatus.isJumpingMove) {
       this.playerStatus.isJumpingMove = false;
     }
   }
@@ -243,17 +248,11 @@ export class Player extends Component {
   }
 
   setMovingJumpStatus() {
-    this.playerJumpDatas.moveSpeed =
-      this.playerJumpDatas.moveSpeed *
-      (this.playerStatus.direction === PLAYER_DIRECTION.TO_RIGHT ? 1 : -1) *
-      0.5;
+    this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed * 0.5;
   }
 
   setJumpingMoveStatus() {
-    this.playerJumpDatas.moveSpeed =
-      this.playerJumpDatas.moveSpeed *
-      (this.playerStatus.direction === PLAYER_DIRECTION.TO_RIGHT ? 1 : -1) *
-      0.5;
+    this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed * 0.5;
   }
 
   changePlayerDirection(direction) {
@@ -281,9 +280,6 @@ export class Player extends Component {
       this.playerJumpDatas.moveSpeed * deltaTime,
       "x"
     );
-    console.log("movingJumpAction================");
-    console.log(this.playerJumpDatas.moveSpeed);
-    console.log("movingJumpAction================");
   }
 
   checkIsJumping() {
