@@ -73,36 +73,42 @@ export class Player extends Component {
   coolDownMaps = { shot: 0, jumpKeyPress: 0 };
 
   onLoad() {
+    // 原地跳跃后按方向键的行为节点
     const jumpingMoveNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [],
       nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING_MOVE),
     };
 
+    // 原地跳跃的行为节点
     const jumpingNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [],
       nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING),
     };
 
+    // 原地跳跃的行为根节点
     const jumpRootNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [jumpingMoveNode, jumpingNode],
       nodeFunction: undefined,
     };
 
+    // 移动中跳跃的行为节点
     const movingJumpNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [],
       nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.MOVING_JUMP),
     };
 
+    // 移动的行为节点
     const movingNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [],
       nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.MOVING),
     };
 
+    // 移动的行为根节点
     const moveRootNode: PlayerActionNodeTree = {
       parallelChildNodes: [],
       serialChildNodes: [movingJumpNode, movingNode],
@@ -132,6 +138,13 @@ export class Player extends Component {
         deltaTime
       );
     });
+
+    // 递归遍历行为树
+    /**
+     *
+     * @param node 当前所要验证的节点
+     * @returns 节点中的函数是否执行，如执行其他串行节点不执行，同时执行同层级的并行节点
+     */
     const runActionNodeTree = (node: PlayerActionNodeTree): boolean => {
       let isPerformed = false;
       if (node.serialChildNodes.length) {
@@ -172,6 +185,7 @@ export class Player extends Component {
     }
   }
 
+  // 影响坐标的行为处理函数
   runAction(actions: PLAYER_ACTIONS, deltaTime: number) {
     let isPerformed = false;
     let currentPosition = this.node.getPosition(this.playerPosition);
