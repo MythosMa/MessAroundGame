@@ -5,7 +5,7 @@ import {
   PLAYER_DIRECTION,
   PLAYER_JUMP_DIRECTION,
 } from "../Types/PlayerStatus";
-import { JumpActionData, PlayerActionTreeNode } from "../Types/Common";
+import { JumpActionData, PlayerActionNodeTree } from "../Types/Common";
 import { changePosition, dealCoolDown } from "../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
@@ -51,13 +51,10 @@ export class Player extends Component {
     isJumpingMove: false,
   };
 
-  // 角色当前行为树
-  playerActionNode: PlayerActionTreeNode = {
-    currentNodeFunc: undefined,
-    toNextConditionFunc: undefined,
-    falseNext: undefined,
-    trueNext: undefined,
-    noNextNodeFunc: undefined,
+  playerActionNodeTree: PlayerActionNodeTree = {
+    parallelChildNodes: [],
+    serialChildNodes: [],
+    nodeFunction: undefined,
   };
 
   // 角色跳跃信息
@@ -76,37 +73,43 @@ export class Player extends Component {
   coolDownMaps = { shot: 0, jumpKeyPress: 0 };
 
   onLoad() {
-    const movingJumpActionNode: PlayerActionTreeNode = {
-      toNextConditionFunc: undefined,
-      trueNext: undefined,
-      falseNext: undefined,
-      currentNodeFunc: undefined,
-      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.MOVING_JUMP),
+    const jumpingMoveNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [],
+      nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING_MOVE),
     };
-    const movingActionNode: PlayerActionTreeNode = {
-      toNextConditionFunc: this.checkIsMovingJump.bind(this),
-      trueNext: movingJumpActionNode,
-      falseNext: undefined,
-      currentNodeFunc: undefined,
-      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.MOVING),
+
+    const jumpingNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [],
+      nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING),
     };
-    const jumpingMoveActionNode: PlayerActionTreeNode = {
-      toNextConditionFunc: undefined,
-      trueNext: undefined,
-      falseNext: undefined,
-      currentNodeFunc: undefined,
-      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING_MOVE),
+
+    const jumpRootNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [jumpingMoveNode, jumpingNode],
+      nodeFunction: undefined,
     };
-    const jumpingActionNode: PlayerActionTreeNode = {
-      toNextConditionFunc: this.checkIsJumpingMove.bind(this),
-      trueNext: jumpingMoveActionNode,
-      falseNext: undefined,
-      currentNodeFunc: undefined,
-      noNextNodeFunc: this.runAction.bind(this, PLAYER_ACTIONS.JUMPING),
+
+    const movingJumpNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [],
+      nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.MOVING_JUMP),
     };
-    this.playerActionNode.toNextConditionFunc = this.checkIsJumping.bind(this);
-    this.playerActionNode.falseNext = movingActionNode;
-    this.playerActionNode.trueNext = jumpingActionNode;
+
+    const movingNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [],
+      nodeFunction: this.runAction.bind(this, PLAYER_ACTIONS.MOVING),
+    };
+
+    const moveRootNode: PlayerActionNodeTree = {
+      parallelChildNodes: [],
+      serialChildNodes: [movingJumpNode, movingNode],
+      nodeFunction: undefined,
+    };
+
+    this.playerActionNodeTree.serialChildNodes = [jumpRootNode, moveRootNode];
   }
 
   start() {}
@@ -129,23 +132,29 @@ export class Player extends Component {
         deltaTime
       );
     });
+    const runActionNodeTree = (node: PlayerActionNodeTree): boolean => {
+      let isPerformed = false;
+      if (node.serialChildNodes.length) {
+        for (let i = 0; i < node.serialChildNodes.length; i++) {
+          let childNode = node.serialChildNodes[i];
+          isPerformed = runActionNodeTree(childNode);
+          if (isPerformed) {
+            break;
+          }
+        }
+      } else if (node.nodeFunction) {
+        isPerformed = node.nodeFunction(deltaTime);
+      }
+      if (isPerformed && node.parallelChildNodes.length) {
+        for (let i = 0; i < node.parallelChildNodes.length; i++) {
+          runActionNodeTree(node.parallelChildNodes[i]);
+        }
+      }
 
-    let actionNode = this.playerActionNode;
-    while (actionNode) {
-      actionNode.currentNodeFunc && actionNode.currentNodeFunc(deltaTime);
-      let nextNode = null;
-      if (actionNode.toNextConditionFunc) {
-        nextNode = actionNode.toNextConditionFunc()
-          ? actionNode.trueNext
-          : actionNode.falseNext;
-      } else {
-        nextNode = null;
-      }
-      if (!nextNode) {
-        actionNode.noNextNodeFunc && actionNode.noNextNodeFunc(deltaTime);
-      }
-      actionNode = nextNode;
-    }
+      return isPerformed;
+    };
+
+    runActionNodeTree(this.playerActionNodeTree);
   }
 
   playerMoving(direction) {
@@ -177,45 +186,29 @@ export class Player extends Component {
   }
 
   runAction(actions: PLAYER_ACTIONS, deltaTime: number) {
+    let isPerformed = false;
     let currentPosition = this.node.getPosition(this.playerPosition);
     switch (actions) {
       case PLAYER_ACTIONS.MOVING:
-        this.movingAction(deltaTime, currentPosition);
+        isPerformed = this.movingNodeFunction(deltaTime, currentPosition);
         break;
       case PLAYER_ACTIONS.JUMPING:
-        this.jumpingAction(deltaTime, currentPosition);
+        isPerformed = this.jumpingNodeFunction(deltaTime, currentPosition);
         break;
       case PLAYER_ACTIONS.JUMPING_MOVE:
-        this.jumpingMoveAction(deltaTime, currentPosition);
+        isPerformed = this.jumpingMoveNodeFunction(deltaTime, currentPosition);
         break;
       case PLAYER_ACTIONS.MOVING_JUMP:
-        this.movingJumpAction(deltaTime, currentPosition);
+        isPerformed = this.movingJumpNodeFunction(deltaTime, currentPosition);
         break;
     }
-
-    // console.log("runAction=============");
-    // console.log(deltaTime);
-    // console.log(actions);
-    // console.log("runAction=============");
-
     this.node.setPosition(currentPosition);
-  }
 
-  checkIsMovingJump() {
-    return this.playerStatus.isMovingJump;
+    return isPerformed;
   }
-
   moveKeyDown(playerMovingDirection) {
     this.playerMovingPool.push(playerMovingDirection);
     this.setMovingStatus();
-    if (!this.playerStatus.isMovingJump && this.playerStatus.isJumping) {
-      this.playerStatus.isJumpingMove = true;
-    }
-    if (this.playerStatus.isMovingJump && this.playerMovingPool.length === 1) {
-      this.setMovingJumpStatus();
-    } else if (this.playerStatus.isJumpingMove) {
-      this.setJumpingMoveStatus();
-    }
   }
 
   moveKeyUp(playerMovingDirection: PLAYER_DIRECTION) {
@@ -225,34 +218,28 @@ export class Player extends Component {
     }
     if (this.playerMovingPool.length) {
       this.setMovingStatus();
-      if (this.playerStatus.isMovingJump && index === 0) {
-        this.setMovingJumpStatus();
-      } else if (this.playerStatus.isJumpingMove) {
-        this.setJumpingMoveStatus();
-      }
     } else {
       this.playerCurrentMovingSpeed = 0;
       this.playerStatus.isMoving = false;
     }
-    if (!this.playerStatus.isJumping && this.playerStatus.isJumpingMove) {
-      this.playerStatus.isJumpingMove = false;
-    }
   }
 
   setMovingStatus() {
+    let oriDirection = this.playerStatus.direction;
     this.changePlayerDirection(this.playerMovingPool[0]);
+    let isChangeDirection = oriDirection !== this.playerStatus.direction;
     this.playerCurrentMovingSpeed =
       this.playerMovingSpeed *
       (this.playerStatus.direction === PLAYER_DIRECTION.TO_RIGHT ? 1 : -1);
     this.playerStatus.isMoving = true;
-  }
-
-  setMovingJumpStatus() {
-    this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed * 0.5;
-  }
-
-  setJumpingMoveStatus() {
-    this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed * 0.5;
+    if (this.playerStatus.isJumping && !this.playerStatus.isMovingJump) {
+      this.playerStatus.isJumpingMove = true;
+      this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed;
+    }
+    if (isChangeDirection && this.playerStatus.isMovingJump) {
+      this.playerJumpDatas.moveSpeed =
+        this.playerJumpDatas.moveSpeed * 0.5 * -1;
+    }
   }
 
   changePlayerDirection(direction) {
@@ -265,39 +252,13 @@ export class Player extends Component {
     }
   }
 
-  movingAction(deltaTime: number, currentPosition) {
-    changePosition(
-      currentPosition,
-      this.playerCurrentMovingSpeed * deltaTime,
-      "x"
-    );
-  }
-
-  movingJumpAction(deltaTime: number, currentPosition) {
-    this.jumpingAction(deltaTime, currentPosition);
-    changePosition(
-      currentPosition,
-      this.playerJumpDatas.moveSpeed * deltaTime,
-      "x"
-    );
-  }
-
-  checkIsJumping() {
-    return !this.playerStatus.isMovingJump && this.playerStatus.isJumping;
-  }
-
-  checkIsJumpingMove() {
-    return this.playerStatus.isJumpingMove;
-  }
-
   jumpKeyDown() {
     if (!this.playerStatus.isJumping) {
       this.playerStatus.isJumping = true;
-      if (this.playerCurrentMovingSpeed) {
+      if (this.playerStatus.isMoving) {
         this.playerStatus.isMovingJump = true;
       }
       this.coolDownMaps.jumpKeyPress = this.playerJumpKeyPressTime;
-
       this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
       this.playerJumpDatas.moveSpeed = this.playerCurrentMovingSpeed;
       this.playerJumpDatas.startPositionY = this.node.getPosition().y;
@@ -380,15 +341,53 @@ export class Player extends Component {
       currentPosition.y = this.playerJumpDatas.startPositionY;
       this.playerStatus.isJumping = false;
       this.playerStatus.isMovingJump = false;
+      this.playerStatus.isJumpingMove = false;
     }
   }
 
-  jumpingMoveAction(deltaTime: number, currentPosition) {
-    this.jumpingAction(deltaTime, currentPosition);
-    changePosition(
-      currentPosition,
-      this.playerJumpDatas.moveSpeed * deltaTime,
-      "x"
-    );
+  jumpingNodeFunction(deltaTime: number, currentPosition) {
+    if (!this.playerStatus.isMovingJump && this.playerStatus.isJumping) {
+      this.jumpingAction(deltaTime, currentPosition);
+      return true;
+    }
+    return false;
+  }
+
+  jumpingMoveNodeFunction(deltaTime: number, currentPosition) {
+    if (this.playerStatus.isJumpingMove) {
+      this.jumpingAction(deltaTime, currentPosition);
+      changePosition(
+        currentPosition,
+        this.playerJumpDatas.moveSpeed * 0.5 * deltaTime,
+        "x"
+      );
+      return true;
+    }
+    return false;
+  }
+
+  movingJumpNodeFunction(deltaTime: number, currentPosition) {
+    if (this.playerStatus.isMovingJump) {
+      this.jumpingAction(deltaTime, currentPosition);
+      changePosition(
+        currentPosition,
+        this.playerJumpDatas.moveSpeed * deltaTime,
+        "x"
+      );
+      return true;
+    }
+    return false;
+  }
+
+  movingNodeFunction(deltaTime: number, currentPosition) {
+    if (!this.playerStatus.isJumping && this.playerStatus.isMoving) {
+      changePosition(
+        currentPosition,
+        this.playerCurrentMovingSpeed * deltaTime,
+        "x"
+      );
+      return true;
+    }
+    return false;
   }
 }

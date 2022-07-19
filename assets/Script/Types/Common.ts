@@ -6,12 +6,10 @@ export enum KEY_CODE {
   KEY_Z = 90,
 }
 
-export interface PlayerActionTreeNode {
-  toNextConditionFunc: Function | null; // 子节点的判定函数
-  trueNext: PlayerActionTreeNode | null; // 判定为真执行的子节点
-  falseNext: PlayerActionTreeNode | null; // 判定为假执行的子节点
-  currentNodeFunc: Function | null; // 当前节点必须要执行的函数
-  noNextNodeFunc: Function | null; // 当不存在子节点时要执行的函数
+export interface PlayerActionNodeTree {
+  parallelChildNodes: Array<PlayerActionNodeTree>; // 并行子节点，即子节点串行节点中如果有满足执行条件的情况下，即可执行的子节点
+  serialChildNodes: Array<PlayerActionNodeTree>; // 串行子节点，递归检查是否有可执行的子节点
+  nodeFunction: Function | undefined; // 当前节点的执行函数，返回 true 表示该节点满足执行条件并已成功执行
 }
 
 export interface JumpActionData {
