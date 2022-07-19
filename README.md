@@ -18,4 +18,4 @@
 1. 更新了移动和跳跃的逻辑，放弃了 Tween 的实现
 2. 更新了行为树的方式处理角色的行为反馈
 
-Created by Cocos Creator 3.5.0
+Created by Cocos Creator 3.5.2
