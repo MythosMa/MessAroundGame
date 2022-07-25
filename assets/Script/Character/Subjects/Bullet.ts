@@ -1,6 +1,6 @@
 import { _decorator, Component, Node } from "cc";
-import { PLAYER_DIRECTION } from "../Types/PlayerStatus";
-import { changePosition, checkOutScreen } from "../utils/nodeScriptTools";
+import { PLAYER_DIRECTION } from "../Player/PlayerTypes";
+import { changePosition, checkOutScreen } from "../../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 

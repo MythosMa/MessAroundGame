@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, input, Input, KeyCode } from "cc";
-import { PLAYER_DIRECTION } from "../Types/PlayerStatus";
-import { KEY_CODE } from "../Types/Common";
+import { PLAYER_DIRECTION } from "../Character/Player/PlayerTypes";
+import { KEY_CODE } from "./ControllerTypes";
 
 const { ccclass, property } = _decorator;
 

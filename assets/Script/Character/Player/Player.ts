@@ -4,9 +4,9 @@ import {
   PLAYER_ACTIONS,
   PLAYER_DIRECTION,
   PLAYER_JUMP_DIRECTION,
-} from "../Types/PlayerStatus";
-import { JumpActionData, PlayerActionNodeTree } from "../Types/Common";
-import { changePosition, dealCoolDown } from "../utils/nodeScriptTools";
+} from "./PlayerTypes";
+import { JumpActionData, PlayerActionNodeTree } from "./PlayerTypes";
+import { changePosition, dealCoolDown } from "../../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 @ccclass("Player")
