@@ -7,6 +7,7 @@ export enum ScriptActionCommand {
 
   // 脚本命令(NPC)
   STAND,
+  WALKING,
   WALKING_RANDOM,
 
   // 跳转条件命令

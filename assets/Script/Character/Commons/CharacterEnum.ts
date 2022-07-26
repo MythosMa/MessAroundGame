@@ -1,5 +1,15 @@
-export enum Role {
+export enum ROLE {
   PLAYER_CONTROL = 10000,
   NPC_FRIENDLY,
   NPC_ENEMY,
+}
+
+export enum CHARACTER_DIRECTION {
+  TO_LEFT,
+  TO_RIGHT,
+}
+
+export enum CHARACTER_ACTION {
+  STAND,
+  MOVING,
 }

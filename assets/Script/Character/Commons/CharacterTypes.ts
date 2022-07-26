@@ -1,9 +1,9 @@
-import { Role } from "./CharacterEnum";
+import { ROLE } from "./CharacterEnum";
 
 export interface CharacterData {
   id: string;
   name: string;
-  roldId: Role | null;
+  roldId: ROLE | null;
   animation?: CharacterAnimation;
 }
 
