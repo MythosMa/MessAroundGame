@@ -1,9 +1,19 @@
 {
-  "__version__": "1.0.2",
   "general": {
     "designResolution": {
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "fitHeight": true
     }
-  }
+  },
+  "layer": [
+    {
+      "name": "UI",
+      "value": 1
+    },
+    {
+      "name": "Scene",
+      "value": 2
+    }
+  ]
 }

@@ -1,4 +1,5 @@
-import { _decorator, Component, Prefab, Node, NodePool, instantiate } from "cc";
+import { _decorator, Component, Prefab, Node, NodePool, instantiate, Vec2, UITransform, math } from "cc";
+import { changePosition } from "../utils/nodeScriptTools";
 const { ccclass, property } = _decorator;
 
 @ccclass("SceneController")
@@ -9,7 +10,14 @@ export class SceneController extends Component {
   @property(Node)
   player = null;
 
+  @property(Node)
+  camera = null;
+
+  @property(Node)
+  map = null;
+
   bulletPool: NodePool = null;
+  mapSize: math.Size = null;
 
   onLoad() {
     this.bulletPool = new NodePool();
@@ -18,6 +26,11 @@ export class SceneController extends Component {
       let bullet = instantiate(this.playerBulletPrefab);
       this.bulletPool.put(bullet);
     }
+    this.mapSize = this.map.getComponent(UITransform).contentSize;
+
+    console.log("this.mapSize============")
+    console.log(this.mapSize)
+    console.log("this.mapSize============")
   }
 
   start() {
@@ -26,7 +39,19 @@ export class SceneController extends Component {
     }
   }
 
-  update(deltaTime: number) {}
+  update(deltaTime: number) {
+    // this.changeCameraPosition();
+    // console.log("update====================");
+    // console.log(this.camera.position);
+    // console.log(this.camera);
+    // console.log("update====================");
+  }
+
+  changeCameraPosition() {
+    let currentPosition = this.camera.position;
+    changePosition(currentPosition, 10, "x");
+    this.camera.setPosition(currentPosition);
+  }
 
   playerShot(playerPosition, playerDirection) {
     let bullet = null;

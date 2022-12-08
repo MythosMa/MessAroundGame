@@ -61,7 +61,7 @@ class NpcBase extends CharacterBase {
           break;
         case ScriptActionCommand.CHANGE_SCRIPT_NO_CONDITION:
           break;
-        case ScriptActionCommand.CHANGE_SCRIPT_TASK_INFO:
+        case ScriptActionCommand.CHANGE_SCRIPT_BY_TASK_INFO:
           break;
       }
     }
