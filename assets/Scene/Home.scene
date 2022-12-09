@@ -20,6 +20,7 @@
     ],
     "_active": true,
     "_components": [],
+    "_prefab": null,
     "autoReleaseAssets": false,
     "_globals": {
       "__id__": 71
@@ -90,7 +91,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Camera",
+    "_name": "MainCamera",
     "_objFlags": 0,
     "_parent": {
       "__id__": 2
@@ -168,7 +169,7 @@
     "_shutter": 7,
     "_iso": 0,
     "_screenScale": 1,
-    "_visibility": 41943040,
+    "_visibility": 2,
     "_targetTexture": null,
     "_cameraType": -1,
     "_trackingType": 0,
@@ -212,7 +213,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -274,7 +275,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -320,7 +321,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -425,7 +426,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -540,7 +541,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -586,7 +587,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -786,7 +787,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -832,7 +833,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -1017,7 +1018,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -1063,7 +1064,7 @@
       "y": 1,
       "z": 1
     },
-    "_layer": 33554432,
+    "_layer": 2,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -1674,8 +1675,8 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 255,
-      "b": 255,
+      "g": 0,
+      "b": 0,
       "a": 255
     },
     "_spriteFrame": {
@@ -1908,8 +1909,8 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
+      "r": 0,
+      "g": 0,
       "b": 255,
       "a": 255
     },
