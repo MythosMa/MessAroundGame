@@ -1,4 +1,4 @@
-import { _decorator, Component, Prefab, Node, NodePool, instantiate, Vec2, UITransform, math } from "cc";
+import { _decorator, Component, Prefab, Node, NodePool, instantiate, Vec2, UITransform, math, Camera, Vec3 } from "cc";
 import { changePosition } from "../utils/nodeScriptTools";
 const { ccclass, property } = _decorator;
 
@@ -16,8 +16,13 @@ export class SceneController extends Component {
   @property(Node)
   map = null;
 
+  @property(Node)
+  canvas = null
+
+
   bulletPool: NodePool = null;
   mapSize: math.Size = null;
+  canvasSize: math.Size = null;
 
   onLoad() {
     this.bulletPool = new NodePool();
@@ -27,10 +32,7 @@ export class SceneController extends Component {
       this.bulletPool.put(bullet);
     }
     this.mapSize = this.map.getComponent(UITransform).contentSize;
-
-    console.log("this.mapSize============")
-    console.log(this.mapSize)
-    console.log("this.mapSize============")
+    this.canvasSize = this.canvas.getComponent(UITransform).contentSize;
   }
 
   start() {
@@ -45,6 +47,7 @@ export class SceneController extends Component {
     // console.log(this.camera.position);
     // console.log(this.camera);
     // console.log("update====================");
+    this.cameraMove()
   }
 
   changeCameraPosition() {
@@ -65,5 +68,10 @@ export class SceneController extends Component {
 
   destoryBullet(bullet) {
     this.bulletPool.put(bullet);
+  }
+
+  cameraMove(){
+    const playerInScreenPosition = this.camera.getComponent(Camera).worldToScreen(new Vec3(this.player.getPosition().x, this.player.getPosition().y, 0))
+    const cameraPosition = this.camera.position
   }
 }
