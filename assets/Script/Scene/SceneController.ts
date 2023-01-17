@@ -11,7 +11,11 @@ import {
   Camera,
   Vec3,
 } from "cc";
-import { changePosition } from "../utils/nodeScriptTools";
+import {
+  changePosition,
+  getObjectInScreenPositionPercent,
+  checkOutScreen,
+} from "../utils/nodeScriptTools";
 const { ccclass, property } = _decorator;
 
 @ccclass("SceneController")
@@ -31,16 +35,21 @@ export class SceneController extends Component {
   @property(Node)
   canvas = null;
 
-  @property(Number)
-  cameraStartX = 0;
+  @property(Node)
+  cameraLeftTrap = null;
+
+  @property(Node)
+  cameraRightTrap = null;
 
   @property(Number)
-  camreaEndX = 0;
+  cameraMoveLeftStart = 0;
+
+  @property(Number)
+  cameraMoveRightStart = 0;
 
   bulletPool: NodePool = null;
   mapSize: math.Size = null;
   canvasSize: math.Size = null;
-  cameraStartMoveDirection: number = 1;
 
   onLoad() {
     this.bulletPool = new NodePool();
@@ -59,34 +68,33 @@ export class SceneController extends Component {
     }
   }
 
-  update(deltaTime: number) {
-    this.changeCameraPosition();
-    // console.log("update====================");
-    console.log(this.camera.position);
-    // console.log(this.camera);
-    // console.log("update====================");
-    // this.cameraMove()
-  }
+  update(deltaTime: number) {}
 
-  changeCameraPosition() {
-    let currentPosition = this.camera.position;
-    changePosition(currentPosition, 10 * this.cameraStartMoveDirection, "x");
-
+  changeCameraPosition(moveDistance) {
+    const playerPositionInScreen = getObjectInScreenPositionPercent(
+      this.player,
+      this.camera
+    );
+    const cameraLeftTrapPositionInScreen = getObjectInScreenPositionPercent(
+      this.cameraLeftTrap,
+      this.camera
+    );
+    const cameraRightTrapPositionInScreen = getObjectInScreenPositionPercent(
+      this.cameraRightTrap,
+      this.camera
+    );
     if (
-      this.cameraStartMoveDirection > 0 &&
-      currentPosition.x > this.camreaEndX
+      (moveDistance > 0 &&
+        playerPositionInScreen > this.cameraMoveRightStart &&
+        cameraRightTrapPositionInScreen > 1) ||
+      (moveDistance < 0 &&
+        playerPositionInScreen < this.cameraMoveLeftStart &&
+        cameraLeftTrapPositionInScreen < 0)
     ) {
-      // this.cameraStartMoveDirection = -1;
-      currentPosition.x = this.camreaEndX;
-    } else if (
-      this.cameraStartMoveDirection < 0 &&
-      currentPosition.x < this.cameraStartX
-    ) {
-      this.cameraStartMoveDirection = 1;
-      currentPosition.x = this.cameraStartX;
+      let currentPosition = this.camera.position;
+      changePosition(currentPosition, moveDistance, "x");
+      this.camera.setPosition(currentPosition);
     }
-
-    this.camera.setPosition(currentPosition);
   }
 
   playerShot(playerPosition, playerDirection) {
@@ -103,20 +111,7 @@ export class SceneController extends Component {
     this.bulletPool.put(bullet);
   }
 
-  cameraMove() {
-    const playerInScreenPosition = this.camera
-      .getComponent(Camera)
-      .worldToScreen(
-        new Vec3(this.player.getPosition().x, this.player.getPosition().y, 0)
-      );
-    const cameraPosition = this.camera.position;
-    // canvas的锚点是 0.5 0.5，所以在计算 角色在屏幕中的坐标时，为了精确需要补差值
-    const playerInScreenPercent =
-      (playerInScreenPosition.x + this.canvasSize.width / 2) /
-      this.canvasSize.width;
-    console.log("playerInScreenPercent================");
-    console.log(playerInScreenPosition);
-    console.log(this.canvasSize.width);
-    console.log("playerInScreenPercent================");
+  checkNodeOutScreen(node) {
+    return checkOutScreen(node, this.camera);
   }
 }

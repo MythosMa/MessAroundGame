@@ -1,6 +1,6 @@
 import { _decorator, Component, Node } from "cc";
 import { PLAYER_DIRECTION } from "../Player/PlayerTypes";
-import { changePosition, checkOutScreen } from "../../utils/nodeScriptTools";
+import { changePosition } from "../../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 
@@ -36,7 +36,7 @@ export class Bullet extends Component {
   }
 
   destoryBullet() {
-    if (checkOutScreen(this.node.getPosition()) && this.currentScene) {
+    if (this.currentScene && this.currentScene.checkNodeOutScreen(this.node)) {
       this.currentScene.destoryBullet(this.node);
       this.isStart = false;
       this.node.removeFromParent();

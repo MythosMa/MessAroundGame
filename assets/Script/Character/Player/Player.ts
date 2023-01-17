@@ -6,7 +6,7 @@ import {
   PLAYER_JUMP_DIRECTION,
 } from "./PlayerTypes";
 import { JumpActionData, PlayerActionNodeTree } from "./PlayerTypes";
-import { changePosition, dealCoolDown } from "../../utils/nodeScriptTools";
+import { changePosition, dealCoolDown, getCanvasSize } from "../../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 @ccclass("Player")
@@ -296,7 +296,7 @@ export class Player extends Component {
 
   jumpUpAction(deltaTime: number, currentPosition) {
     this.playerStatus.jumpDirection = PLAYER_JUMP_DIRECTION.TO_UP;
-    changePosition(
+    this.changePlayerPosition(
       currentPosition,
       this.playerJumpDatas.jumpSpeed * deltaTime,
       "y"
@@ -310,7 +310,7 @@ export class Player extends Component {
     let s = v0 * t + 0.5 * a * t * t;
     this.playerJumpDatas.jumpSpeed = this.playerJumpDatas.jumpSpeed - a * t;
 
-    changePosition(currentPosition, s, "y");
+    this.changePlayerPosition(currentPosition, s, "y");
 
     if (this.playerJumpDatas.jumpSpeed <= 0) {
       this.playerJumpDatas.jumpSpeed = 0;
@@ -325,7 +325,7 @@ export class Player extends Component {
     let s = v0 * t + 0.5 * a * t * t;
     this.playerJumpDatas.jumpSpeed = this.playerJumpDatas.jumpSpeed + a * t;
 
-    changePosition(currentPosition, -s, "y");
+    this.changePlayerPosition(currentPosition, -s, "y");
 
     if (this.playerJumpDatas.jumpSpeed >= this.playerJumpSpeed) {
       this.playerJumpDatas.jumpSpeed = this.playerJumpSpeed;
@@ -334,7 +334,7 @@ export class Player extends Component {
   }
 
   jumpDownAction(deltaTime: number, currentPosition) {
-    changePosition(
+    this.changePlayerPosition(
       currentPosition,
       -this.playerJumpDatas.jumpSpeed * deltaTime,
       "y"
@@ -358,7 +358,7 @@ export class Player extends Component {
   jumpingMoveNodeFunction(deltaTime: number, currentPosition) {
     if (this.playerStatus.isJumpingMove) {
       this.jumpingAction(deltaTime, currentPosition);
-      changePosition(
+      this.changePlayerPosition(
         currentPosition,
         this.playerJumpDatas.moveSpeed * 0.5 * deltaTime,
         "x"
@@ -371,7 +371,7 @@ export class Player extends Component {
   movingJumpNodeFunction(deltaTime: number, currentPosition) {
     if (this.playerStatus.isMovingJump) {
       this.jumpingAction(deltaTime, currentPosition);
-      changePosition(
+      this.changePlayerPosition(
         currentPosition,
         this.playerJumpDatas.moveSpeed * deltaTime,
         "x"
@@ -383,7 +383,7 @@ export class Player extends Component {
 
   movingNodeFunction(deltaTime: number, currentPosition) {
     if (!this.playerStatus.isJumping && this.playerStatus.isMoving) {
-      changePosition(
+      this.changePlayerPosition(
         currentPosition,
         this.playerCurrentMovingSpeed * deltaTime,
         "x"
@@ -391,5 +391,21 @@ export class Player extends Component {
       return true;
     }
     return false;
+  }
+
+  changePlayerPosition(
+    currentPosition: Vec3,
+    moveDistance: number,
+    direction: string
+  ) {
+    if (direction === "x") {
+      const canvasSize = getCanvasSize();
+      this.changeCameraPosition(moveDistance);
+    }
+    changePosition(currentPosition, moveDistance, direction);
+  }
+
+  changeCameraPosition(moveDistance) {
+    this.currentScene.changeCameraPosition(moveDistance);
   }
 }
