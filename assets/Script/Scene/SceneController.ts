@@ -13,8 +13,12 @@ import {
 } from "cc";
 import {
   changePosition,
+  getObjectInScreenPosition,
   getObjectInScreenPositionPercent,
   checkOutScreen,
+  getScreenSize,
+  getCanvasSize,
+  getDesignResolutionSize,
 } from "../utils/nodeScriptTools";
 const { ccclass, property } = _decorator;
 
@@ -36,10 +40,10 @@ export class SceneController extends Component {
   canvas = null;
 
   @property(Node)
-  cameraLeftTrap = null;
+  mapLeftTrap = null;
 
   @property(Node)
-  cameraRightTrap = null;
+  mapRightTrap = null;
 
   @property(Number)
   cameraMoveLeftStart = 0;
@@ -68,7 +72,13 @@ export class SceneController extends Component {
     }
   }
 
-  update(deltaTime: number) {}
+  update(deltaTime: number) {
+    this.checkMapMoveToTrap();
+  }
+
+  getMainCamera() {
+    return this.camera;
+  }
 
   changeCameraPosition(moveDistance) {
     const playerPositionInScreen = getObjectInScreenPositionPercent(
@@ -76,11 +86,11 @@ export class SceneController extends Component {
       this.camera
     );
     const cameraLeftTrapPositionInScreen = getObjectInScreenPositionPercent(
-      this.cameraLeftTrap,
+      this.mapLeftTrap,
       this.camera
     );
     const cameraRightTrapPositionInScreen = getObjectInScreenPositionPercent(
-      this.cameraRightTrap,
+      this.mapRightTrap,
       this.camera
     );
     if (
@@ -111,7 +121,13 @@ export class SceneController extends Component {
     this.bulletPool.put(bullet);
   }
 
-  checkNodeOutScreen(node) {
+  checkNodeOutScreen(node: Node) {
     return checkOutScreen(node, this.camera);
   }
+
+  objectInScreenPosition(object: Node) {
+    return getObjectInScreenPosition(object, this.camera);
+  }
+
+  checkMapMoveToTrap() {}
 }

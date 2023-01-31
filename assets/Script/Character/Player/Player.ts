@@ -6,7 +6,12 @@ import {
   PLAYER_JUMP_DIRECTION,
 } from "./PlayerTypes";
 import { JumpActionData, PlayerActionNodeTree } from "./PlayerTypes";
-import { changePosition, dealCoolDown, getCanvasSize } from "../../utils/nodeScriptTools";
+import {
+  changePosition,
+  dealCoolDown,
+  getCanvasSize,
+  getObjectInScreenPosition,
+} from "../../utils/nodeScriptTools";
 
 const { ccclass, property } = _decorator;
 @ccclass("Player")
@@ -400,6 +405,15 @@ export class Player extends Component {
   ) {
     if (direction === "x") {
       const canvasSize = getCanvasSize();
+      const currentPositionX =
+        this.currentScene.objectInScreenPosition(this.node).x;
+      const playerWidthHalf = this.node.getComponent(UITransform).width / 2;
+      if (moveDistance < 0) {
+        const afterMoveX = currentPositionX - playerWidthHalf + moveDistance;
+        if (afterMoveX < 0) {
+          moveDistance = moveDistance - (currentPositionX - playerWidthHalf) ;
+        }
+      }
       this.changeCameraPosition(moveDistance);
     }
     changePosition(currentPosition, moveDistance, direction);
