@@ -29,4 +29,8 @@
 
 1. 为地图添加了滚轴，这样地图长度可以超出一个屏幕了
 
-Created by Cocos Creator 3.5.2
+- 2023.2.22
+
+1. 更新creator版本到3.7.1
+
+Created by Cocos Creator 3.7.1
